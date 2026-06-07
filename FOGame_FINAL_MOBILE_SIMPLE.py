@@ -3264,7 +3264,7 @@ if _logo_b64:
                 <div>
                     <div class="hero-eyebrow">BaileyBI Presents</div>
                     <div class="main-title">NBA Front Office Simulator</div>
-                    <div class="sub-title">Build a 13-man current NBA roster with real salaries, flexible positions, fit boosts/penalties, and AI scouting reports.</div>
+                    <div class="sub-title">Build an NBA roster with real salaries, flexible positions, fit boosts/penalties, and AI scouting reports.</div>
                     <div class="hero-badges">
                         <span class="hero-badge">🏀 Real Salaries</span>
                         <span class="hero-badge">📊 Advanced Metrics</span>
@@ -3280,7 +3280,7 @@ if _logo_b64:
 else:
     st.markdown('<div class="main-title">NBA Front Office Simulator</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="sub-title">Build a 13-man current NBA roster with real salaries, flexible positions, fit boosts/penalties, and AI scouting reports.</div>',
+        '<div class="sub-title">Build an NBA roster with real salaries, flexible positions, fit boosts/penalties, and AI scouting reports.</div>',
         unsafe_allow_html=True
     )
 
