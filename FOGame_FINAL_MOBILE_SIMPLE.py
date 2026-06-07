@@ -3721,7 +3721,7 @@ with right:
 
 st.divider()
 
-if len(st.session_state.roster) < MIN_RESULTS_PLAYERS:
+if len(st.session_state.roster) >= MIN_RESULTS_PLAYERS:
     roster_df = pd.DataFrame(list(st.session_state.roster.values()))
 
     # Ensure Slot is correct from dict keys.
