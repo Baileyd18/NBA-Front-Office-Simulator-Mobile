@@ -3864,5 +3864,6 @@ if len(st.session_state.roster) >= MIN_RESULTS_PLAYERS:
 
 else:
     st.warning(
-        f"Draft at least {MIN_RESULTS_PLAYERS} players to generate team results. Current roster: {len(st.session_state.roster)}/{st.session_state.roster_size}."
-    )
+    f"Draft at least {MIN_RESULTS_PLAYERS} players to generate team results. "
+    f"Current roster: {len(st.session_state.roster)}/{st.session_state.roster_size}."
+)
