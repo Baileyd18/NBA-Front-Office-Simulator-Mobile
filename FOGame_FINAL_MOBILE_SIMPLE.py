@@ -2565,24 +2565,26 @@ def calculate_team_metrics(roster_df: pd.DataFrame, salary_cap: int) -> dict:
         projected_wins -= max(0, penalty - 1)
         overall_score -= penalty * 0.25
 
-    # Final calibration boost: earlier versions were grading strong rosters
+        # Final calibration boost: earlier versions were grading strong rosters
     # roughly 18-20 wins too harshly.
-    # Conditional calibration boost.
-# Strong teams were being graded too harshly, but bad/weak rosters should not get a free +20.
-if overall_score >= 85:
-    projected_wins += 14
-    overall_score += 5.0
-elif overall_score >= 78:
-    projected_wins += 10
-    overall_score += 3.5
-elif overall_score >= 70:
-    projected_wins += 6
-    overall_score += 2.0
-elif overall_score >= 62:
-    projected_wins += 3
-    overall_score += 1.0
-else:
-    projected_wins += 0
+    # Strong teams were being graded too harshly, but bad/weak rosters
+    # should not get a free +20.
+
+    if overall_score >= 85:
+        projected_wins += 14
+        overall_score += 5.0
+    elif overall_score >= 78:
+        projected_wins += 10
+        overall_score += 3.5
+    elif overall_score >= 70:
+        projected_wins += 6
+        overall_score += 2.0
+    elif overall_score >= 62:
+        projected_wins += 3
+        overall_score += 1.0
+    else:
+        projected_wins += 0
+
 
     projected_wins = max(15, min(82, projected_wins))
     overall_score = max(0, min(100, overall_score))
