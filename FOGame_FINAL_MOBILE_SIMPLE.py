@@ -3602,7 +3602,7 @@ with left:
         """
         <div class="mobile-draft-panel">
             <div class="mobile-draft-title">Quick Draft</div>
-            <div class="mobile-draft-copy">Search a player, choose the roster slot, and add them. Results unlock at 13 players, with room to build up to 15.</div>
+            <div class="mobile-draft-copy">Search a player, choose the roster slot, and add them. Results unlock at 9 players, with room to build up to 15.</div>
         </div>
         """,
         unsafe_allow_html=True
