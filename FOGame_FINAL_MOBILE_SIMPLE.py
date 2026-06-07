@@ -3406,10 +3406,10 @@ with st.sidebar:
     st.caption("Use these controls to search players, filter the draft pool, and change the active salary level.")
 
     roster_size = st.selectbox(
-        "Roster Size",
-        [13, 14, 15],
-        index=[13, 14, 15].index(st.session_state.roster_size),
-        help="Results unlock once you draft at least 13 players. You can build up to 15."
+    "Roster Size",
+    list(range(9, 16)),
+        index=list(range(9, 16)).index(st.session_state.roster_size),
+        help="Results unlock once you draft at least 9 players. You can build up to 15."
     )
     st.session_state.roster_size = roster_size
     active_roster_slots = ROSTER_SLOTS[:st.session_state.roster_size]
