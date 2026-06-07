@@ -2462,151 +2462,119 @@ def calculate_team_metrics(roster_df: pd.DataFrame, salary_cap: int) -> dict:
     weighted_quality = weighted_average(roster_df, "Player_Quality")
     value_score = normalize(weighted_average(roster_df, "Value_Score"), 3, 16)
 
-# ============================================================
-# FINAL TEAM SCORING MODEL — REALISTIC WIN CALIBRATION
-# ============================================================
+    # Final basketball-first model.
+    # Talent should drive the simulator. Fit matters, but should not bury a roster
+    # with multiple real stars and strong rotation pieces.
+    overall_score = (
+        talent_concentration_score * 0.27 +
+        star_power_score * 0.23 +
+        creation_score * 0.15 +
+        defense_score * 0.14 +
+        depth_score * 0.09 +
+        shooting_score * 0.05 +
+        rebounding_score * 0.03 +
+        fit_score * 0.025 +
+        versatility_score * 0.015
+    )
+
+    # More realistic contender curve.
+    # Good playoff rosters should land in the 50s, elite cores in the 60s,
+    # and stacked superteams in the 70s/80s.
+    projected_wins = round(20 + (overall_score / 100) * 62)
 
     elite_count = talent_context["elite_count"]
     star_count = talent_context["star_count"]
     high_level_count = talent_context["high_level_count"]
 
-    top3_quality = roster_df["Player_Quality"].nlargest(3).mean()
-    top5_quality = roster_df["Player_Quality"].nlargest(5).mean()
-    top8_quality = roster_df["Player_Quality"].nlargest(8).mean()
-    top10_quality = roster_df["Player_Quality"].nlargest(10).mean()
-
-    core_quality = (
-        top3_quality * 0.38 +
-        top5_quality * 0.32 +
-        top8_quality * 0.20 +
-        top10_quality * 0.10
-    )
-
-    roster_balance = (
-        creation_score * 0.18 +
-        defense_score * 0.18 +
-        shooting_score * 0.12 +
-        rebounding_score * 0.10 +
-        depth_score * 0.18 +
-        fit_score * 0.14 +
-        versatility_score * 0.10
-    )
-
-    overall_score = (
-        core_quality * 0.42 +
-        talent_concentration_score * 0.20 +
-        star_power_score * 0.18 +
-        roster_balance * 0.20
-    )
-
-    # Main win curve: stronger teams now scale properly.
-    projected_wins = (
-        8
-        + overall_score * 0.55
-        + core_quality * 0.22
-        + top8_quality * 0.12
-    )
-
-    # Star / talent bonuses
-    projected_wins += elite_count * 4.5
-    projected_wins += star_count * 2.2
-    projected_wins += high_level_count * 0.9
-
-    # Strong roster construction bonuses
-    if top3_quality >= 78:
-        projected_wins += 6
-        overall_score += 2.0
-    elif top3_quality >= 72:
-        projected_wins += 4
-        overall_score += 1.3
-    elif top3_quality >= 66:
-        projected_wins += 2
-
-    if top8_quality >= 66:
-        projected_wins += 5
-        overall_score += 1.5
-    elif top8_quality >= 60:
-        projected_wins += 3
-        overall_score += 1.0
-
-    # Balanced contender bonus
-    pillar_scores = [
-        creation_score,
-        shooting_score,
-        defense_score,
-        rebounding_score,
-        depth_score,
-        fit_score
-    ]
-
-    if min(pillar_scores) >= 60:
-        projected_wins += 5
-        overall_score += 2.0
-    elif min(pillar_scores) >= 52:
-        projected_wins += 3
-        overall_score += 1.0
-
-    # Realistic generic floors
+    # Talent floors: strong star groups should not be treated like .500 teams
+    # just because one slot is imperfect.
     if talent_context["is_historic"]:
-        projected_wins = max(projected_wins, 74)
-        overall_score = max(overall_score, 94)
-
-    elif elite_count >= 2 and star_count >= 3 and high_level_count >= 6:
-        projected_wins = max(projected_wins, 64)
-        overall_score = max(overall_score, 88)
-
-    elif star_count >= 3 and high_level_count >= 6:
-        projected_wins = max(projected_wins, 58)
-        overall_score = max(overall_score, 82)
-
-    elif star_count >= 2 and high_level_count >= 5:
-        projected_wins = max(projected_wins, 52)
+        projected_wins = max(projected_wins, 78)
+        overall_score = max(overall_score, 95)
+    elif elite_count >= 3 or star_count >= 6:
+        projected_wins = max(projected_wins, 72)
+        overall_score = max(overall_score, 90)
+    elif star_count >= 4 and high_level_count >= 7:
+        projected_wins = max(projected_wins, 66)
+        overall_score = max(overall_score, 84)
+    elif star_count >= 3 and high_level_count >= 5:
+        projected_wins = max(projected_wins, 60)
+        overall_score = max(overall_score, 80)
+    elif star_count >= 2 and high_level_count >= 5 and depth_score >= 50:
+        projected_wins = max(projected_wins, 55)
         overall_score = max(overall_score, 76)
+    elif high_level_count >= 4 and depth_score >= 55:
+        projected_wins = max(projected_wins, 50)
+        overall_score = max(overall_score, 72)
 
-    elif star_count >= 1 and high_level_count >= 4:
-        projected_wins = max(projected_wins, 44)
-        overall_score = max(overall_score, 70)
+    # Balanced-team boost for rosters that win through no glaring weakness.
+    pillar_scores = [
+        creation_score, shooting_score, defense_score, rebounding_score,
+        depth_score, fit_score, versatility_score
+    ]
+    if min(pillar_scores) >= 55 and defense_score >= 65 and depth_score >= 60:
+        projected_wins += 5
+        overall_score += 2.0
+    elif min(pillar_scores) >= 50 and depth_score >= 55 and fit_score >= 60:
+        projected_wins += 3
+        overall_score += 1.0
 
-    # Weak roster ceilings
-    if elite_count == 0 and star_count == 0:
-        projected_wins = min(projected_wins, 35)
+    # Star trio / offensive core bonus.
+    if star_count >= 3 and creation_score >= 55:
+        projected_wins += 5
+        overall_score += 1.8
+    elif star_count >= 2 and creation_score >= 60 and depth_score >= 50:
+        projected_wins += 3
+        overall_score += 1.0
 
-    elif elite_count == 0 and star_count <= 1 and high_level_count < 4:
-        projected_wins = min(projected_wins, 42)
+    # Elite balanced contender boost.
+    # A team with multiple high-end players, shooting, defense, and depth
+    # should not be stuck in the high-50s.
+    top4_quality = roster_df["Player_Quality"].nlargest(4).mean()
+    top6_quality = roster_df["Player_Quality"].nlargest(6).mean()
+    strong_rotation_count = len(roster_df[roster_df["Player_Quality"] >= 50])
+    high_minutes_quality = len(roster_df[(roster_df["Player_Quality"] >= 55) & (roster_df["MP"] >= 24)])
 
-    # Major weakness penalties
-    if creation_score < 42:
-        projected_wins -= 4
-        overall_score -= 1.5
+    if top4_quality >= 66 and top6_quality >= 58 and strong_rotation_count >= 7:
+        projected_wins = max(projected_wins, 64)
+        overall_score = max(overall_score, 86)
+    elif top4_quality >= 62 and top6_quality >= 55 and strong_rotation_count >= 6:
+        projected_wins = max(projected_wins, 60)
+        overall_score = max(overall_score, 82)
+    elif top4_quality >= 58 and strong_rotation_count >= 6 and defense_score >= 55:
+        projected_wins = max(projected_wins, 56)
+        overall_score = max(overall_score, 78)
 
-    if defense_score < 42:
-        projected_wins -= 4
-        overall_score -= 1.5
+    # Extra reward for elite two-way cores.
+    if high_minutes_quality >= 4 and defense_score >= 60 and creation_score >= 58:
+        projected_wins += 3
+        overall_score += 1.2
 
-    if depth_score < 38:
-        projected_wins -= 4
-        overall_score -= 1.5
-
-    # Cap penalty
+    # Cap penalty matters, but it should not erase basketball dominance.
+    # The AI report will discuss the financial cost separately.
     if payroll > salary_cap:
-        overage = payroll - salary_cap
-
         if talent_context["is_historic"]:
-            penalty = min(2, int(overage / 100_000_000))
-        elif elite_count >= 2 or star_count >= 4:
-            penalty = min(4, int(overage / 70_000_000))
+            penalty = min(3, int((payroll - salary_cap) / 75_000_000))
+        elif talent_context["is_superteam"]:
+            penalty = min(5, int((payroll - salary_cap) / 50_000_000))
         elif star_count >= 3:
-            penalty = min(5, int(overage / 55_000_000))
+            penalty = min(5, int((payroll - salary_cap) / 45_000_000))
         else:
-            penalty = min(7, int(overage / 40_000_000))
+            penalty = min(7, int((payroll - salary_cap) / 30_000_000))
 
-        projected_wins -= penalty
-        overall_score -= penalty * 0.35
+        projected_wins -= max(0, penalty - 1)
+        overall_score -= penalty * 0.25
 
-    projected_wins = max(15, min(82, round(projected_wins)))
+    # Final calibration boost: earlier versions were grading strong rosters
+    # roughly 18-20 wins too harshly.
+    projected_wins += 20
+    overall_score += 7.5
+
+    projected_wins = max(15, min(82, projected_wins))
     overall_score = max(0, min(100, overall_score))
 
     # Best Shooter should reward both efficiency and volume.
+    # This prevents low-volume high-percentage players from beating true high-gravity shooters.
     roster_df["Shooter_Score"] = (
         roster_df["3P%"] * 100 * 0.62
         + roster_df["3PA"] * 4.75
