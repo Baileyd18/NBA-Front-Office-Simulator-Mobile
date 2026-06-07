@@ -2698,6 +2698,8 @@ def calculate_team_metrics(roster_df: pd.DataFrame, salary_cap: int) -> dict:
         "value_score": round(value_score, 1),
         "weighted_quality": round(weighted_quality, 1),
         "identity": identity,
+        "cumulative_bpm": round(cumulative_bpm, 1),
+        "cumulative_bpm_score": round(cumulative_bpm_score, 1),
         "avg_ts": weighted_average(roster_df, "TS%"),
         "avg_3p": weighted_average(roster_df, "3P%"),
         "avg_bpm": weighted_average(roster_df, "BPM"),
