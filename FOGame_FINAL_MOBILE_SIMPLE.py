@@ -2636,6 +2636,7 @@ def calculate_team_metrics(roster_df: pd.DataFrame, salary_cap: int) -> dict:
         projected_wins += 2
         overall_score += 0.5
 
+    projected_wins = round(projected_wins * 1.25)
     projected_wins = max(15, min(82, projected_wins))
     overall_score = max(0, min(100, overall_score))
 
